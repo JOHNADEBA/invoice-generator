@@ -49,18 +49,12 @@ export async function generatePDF(html: string) {
       headless: true,
     });
   } else {
-    // Local development
     browser = await puppeteer.launch({
       headless: true,
     });
   }
 
   const page = await browser.newPage();
-
-  await page.setViewport({
-    width: 1240,
-    height: 1754,
-  });
 
   await page.setContent(html, {
     waitUntil: "domcontentloaded",
@@ -69,7 +63,6 @@ export async function generatePDF(html: string) {
   const pdf = await page.pdf({
     format: "A4",
     printBackground: true,
-    preferCSSPageSize: true,
   });
 
   await browser.close();
