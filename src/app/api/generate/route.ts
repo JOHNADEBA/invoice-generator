@@ -130,12 +130,12 @@ export async function POST(req: NextRequest) {
 
         .col-qty {
           width: 80px;
-          text-align: center;
+          text-align: right;
         }
 
         .col-price {
           width: 120px;
-          text-align: center;
+          text-align: right;
         }
 
         .col-total {
@@ -195,8 +195,8 @@ export async function POST(req: NextRequest) {
             <tr>
               <th>#</th>
               <th>${t.description}</th>
-              <th style="text-align:center;">${t.qty}</th>
-              <th style="text-align:center;">${t.price}</th>
+              <th style="text-align:right;">${t.qty}</th>
+              <th style="text-align:right;">${t.price}</th>
               <th style="text-align:right;">${t.total}</th>
             </tr>
           </thead>

@@ -67,8 +67,8 @@ export function InvoicePreview({ invoice }: Props) {
             <tr>
               <th className="py-2 text-left w-[40px]">#</th>
               <th className="text-left">{t.description}</th>
-              <th className="text-center w-[80px]">{t.qty}</th>
-              <th className="text-center w-[100px]">{t.price}</th>
+              <th className="text-right w-[80px]">{t.qty}</th>
+              <th className="text-right w-[100px]">{t.price}</th>
               <th className="text-right w-[100px]">{t.total}</th>
             </tr>
           </thead>
@@ -80,18 +80,19 @@ export function InvoicePreview({ invoice }: Props) {
 
                 <td>{item.description}</td>
 
-                <td className="text-center">
+                <td className="text-right tabular-nums">
                   {formatNumber(
                     parseFloat(item.quantity) || 0,
                     invoice.language,
+                    "quantity",
                   )}
                 </td>
 
-                <td className="text-center">
+                <td className="text-right tabular-nums">
                   {formatNumber(parseFloat(item.price) || 0, invoice.language)}
                 </td>
 
-                <td className="text-right">
+                <td className="text-right tabular-nums">
                   {formatNumber(calculateLineTotal(item), invoice.language)}
                 </td>
               </tr>

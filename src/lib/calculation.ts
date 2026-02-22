@@ -13,9 +13,13 @@ export function calculateSubtotal(items: LineItem[]) {
   return items.reduce((sum, item) => sum + calculateLineTotal(item), 0);
 }
 
-export function formatNumber(amount: number, language: Language = "en") {
+export function formatNumber(
+  amount: number,
+  language: Language = "en",
+  type: string = "money",
+) {
   return new Intl.NumberFormat(language, {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: type === "money" ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(amount);
 }
