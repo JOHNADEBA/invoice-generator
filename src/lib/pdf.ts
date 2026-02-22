@@ -32,29 +32,22 @@
 // }
 
 import chromium from "@sparticuz/chromium";
-import puppeteerCore from "puppeteer-core";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 
 export async function generatePDF(html: string) {
-  const isProduction = process.env.VERCEL === "1";
+  const executablePath = await chromium.executablePath();
 
-  const browser = isProduction
-    ? await puppeteerCore.launch({
-        args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
-        executablePath: await chromium.executablePath(),
-        headless: true,
-      })
-    : await puppeteer.launch({
-        headless: true,
-      });
+  const browser = await puppeteer.launch({
+    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath,
+    headless: true,
+  });
 
   const page = await browser.newPage();
 
-  // Manually set viewport (since defaultViewport was removed)
   await page.setViewport({
     width: 1240,
     height: 1754,
-    deviceScaleFactor: 1,
   });
 
   await page.setContent(html, {
