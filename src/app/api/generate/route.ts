@@ -234,14 +234,12 @@ export async function POST(req: NextRequest) {
   </html>
   `;
 
-  console.log("HTML length:", html.length);
-
   const pdfBuffer = await generatePDF(html);
-  console.log("PDF length:", pdfBuffer?.length);
 
   return new Response(Buffer.from(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="invoice-${invoice.invoiceNumber}.pdf"`,
     },
   });
 }
