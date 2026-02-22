@@ -1,65 +1,199 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { v4 as uuid } from "uuid";
+
+import { Invoice } from "@/types/invoice";
+import { LineItemsTable } from "@/components/invoice/LineItemsTable";
+import { InvoicePreview } from "@/components/invoice/InvoicePreview";
+
+import { Input } from "@/components/ui/Input";
+import { TextArea } from "@/components/ui/TextArea";
+import { Button } from "@/components/ui/Button";
+
+export default function Page() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const [currency, setCurrency] = useState<Invoice["currency"]>("USD");
+  const [language, setLanguage] = useState<Invoice["language"]>("en");
+
+  const [items, setItems] = useState([
+    {
+      id: uuid(),
+      description: "",
+      quantity: "1",
+      price: "0",
+    },
+  ]);
+
+  const [invoiceNumber, setInvoiceNumber] = useState("001");
+
+  const [issueDate, setIssueDate] = useState(today);
+
+  const [dueDate, setDueDate] = useState(today);
+
+  const [fromName, setFromName] = useState("");
+  const [fromAddress, setFromAddress] = useState("");
+
+  const [toName, setToName] = useState("");
+  const [toAddress, setToAddress] = useState("");
+
+  const [paymentDetails, setPaymentDetails] = useState("");
+
+  const [notes, setNotes] = useState("");
+
+  const invoice: Invoice = {
+    invoiceNumber,
+    issueDate,
+    dueDate,
+    currency,
+    language,
+    from: {
+      name: fromName,
+      address: fromAddress,
+    },
+    to: {
+      name: toName,
+      address: toAddress,
+    },
+    items,
+    paymentDetails,
+    notes,
+  };
+
+  const downloadPDF = async () => {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        invoice,
+      }),
+    });
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `invoice-${invoiceNumber}.pdf`;
+    a.click();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="p-10">
+      <div className="max-w-6xl mx-auto space-y-10">
+        {/* Header Controls */}
+        <div className="flex justify-between items-end">
+          <div className="space-y-2">
+            <Input
+              placeholder="Invoice Number"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            <div className="flex gap-4">
+              <Input
+                type="date"
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
+              />
+
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+          </div>
+          {/* Currency Selector */}
+          <div>
+            <label className="block mb-1 font-medium">Currency</label>
+            <select
+              value={currency}
+              onChange={(e) =>
+                setCurrency(e.target.value as Invoice["currency"])
+              }
+              className="border rounded-md px-4 py-2"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="NGN">NGN</option>
+            </select>
+          </div>{" "}
+          <div>
+            <label className="block mb-1 font-medium">Language</label>
+            <select
+              value={language}
+              onChange={(e) =>
+                setLanguage(e.target.value as Invoice["language"])
+              }
+              className="border rounded-md px-4 py-2"
+            >
+              <option value="en">English</option>
+              <option value="sl">Slovenščina</option>
+              <option value="it">Italiano</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Company Section */}
+        <div className="flex justify-between">
+          <div className="w-[400px] space-y-3">
+            <h2 className="font-semibold text-lg">From</h2>
+
+            <Input
+              placeholder="Company Name"
+              value={fromName}
+              onChange={(e) => setFromName(e.target.value)}
+            />
+
+            <TextArea
+              placeholder="Company Address (each line will appear on invoice)"
+              value={fromAddress}
+              onChange={(e) => setFromAddress(e.target.value)}
+            />
+          </div>
+
+          <div className="w-[400px] space-y-3 text-right">
+            <h2 className="font-semibold text-lg">To</h2>
+
+            <Input
+              placeholder="Client Name"
+              value={toName}
+              onChange={(e) => setToName(e.target.value)}
+            />
+
+            <TextArea
+              placeholder="Client Address (each line will appear on invoice)"
+              value={toAddress}
+              onChange={(e) => setToAddress(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <LineItemsTable items={items} setItems={setItems} currency={currency} />
+
+        <TextArea
+          placeholder="Payment Details"
+          value={paymentDetails}
+          onChange={(e) => setPaymentDetails(e.target.value)}
+        />
+
+        <TextArea
+          placeholder="Notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+
+        <Button onClick={downloadPDF}>Download PDF</Button>
+
+        <InvoicePreview invoice={invoice} />
+      </div>
+    </main>
   );
 }
