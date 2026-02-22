@@ -1,11 +1,14 @@
 import { NextRequest } from "next/server";
 import { generatePDF } from "@/lib/pdf";
 import { formatCurrency, formatNumber } from "@/lib/calculation";
+import { translations } from "@/lib/translations";
+import type { Invoice } from "@/types/invoice";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { invoice } = await req.json();
+  const { invoice }: { invoice: Invoice } = await req.json();
+  const t = translations[invoice.language];
 
   const rows = invoice.items
     .map((item: any, index: number) => {
@@ -82,13 +85,13 @@ export async function POST(req: NextRequest) {
         }
 
         .company h3 {
-          margin: 0 0 8px 0;
+          margin: 0 0 -18px 0;
           font-size: 14px;
         }
 
         .company-name {
           font-weight: 600;
-          margin-bottom: 6px;
+          margin-bottom: -20px;
         }
 
         table {
@@ -165,23 +168,23 @@ export async function POST(req: NextRequest) {
       <div class="container">
 
         <div class="header">
-          <div class="title">INVOICE</div>
+          <div class="title">${t.invoice}</div>
           <div class="invoice-meta">
-            <div>Invoice #: ${invoice.invoiceNumber}</div>
-            <div>Issue: ${invoice.issueDate}</div>
-            <div>Due: ${invoice.dueDate}</div>
+            <div>${t.invoiceNumber}: ${invoice.invoiceNumber}</div>
+            <div>${t.issue}: ${invoice.issueDate}</div>
+            <div>${t.due}: ${invoice.dueDate}</div>
           </div>
         </div>
 
         <div class="companies">
           <div class="company">
-            <h3>From</h3>
+            <h3>${t.from}</h3>
             <div class="company-name">${invoice.from.name}</div>
             <div>${invoice.from.address}</div>
           </div>
 
           <div class="company" style="text-align:right;">
-            <h3>To</h3>
+            <h3>${t.to}</h3>
             <div class="company-name">${invoice.to.name}</div>
             <div>${invoice.to.address}</div>
           </div>
@@ -191,10 +194,10 @@ export async function POST(req: NextRequest) {
           <thead>
             <tr>
               <th>#</th>
-              <th>Description</th>
-              <th style="text-align:center;">Qty</th>
-              <th style="text-align:center;">Price</th>
-              <th style="text-align:right;">Total</th>
+              <th>${t.description}</th>
+              <th style="text-align:center;">${t.qty}</th>
+              <th style="text-align:center;">${t.price}</th>
+              <th style="text-align:right;">${t.total}</th>
             </tr>
           </thead>
           <tbody>
@@ -203,14 +206,14 @@ export async function POST(req: NextRequest) {
         </table>
 
         <div class="total-section">
-          Total: ${formatCurrency(subtotal, invoice.currency, invoice.language)}
+          ${t.total}: ${formatCurrency(subtotal, invoice.currency, invoice.language)}
         </div>
 
         ${
           invoice.paymentDetails
             ? `
         <div class="payment">
-          <div class="section-title">Payment Details</div>
+          <div class="section-title">${t.paymentDetails}</div>
           ${invoice.paymentDetails}
         </div>`
             : ""
@@ -220,7 +223,7 @@ export async function POST(req: NextRequest) {
           invoice.notes
             ? `
         <div class="notes">
-          <div class="section-title">Notes</div>
+          <div class="section-title">${t.notes}</div>
           ${invoice.notes}
         </div>`
             : ""

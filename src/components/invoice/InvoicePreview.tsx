@@ -18,13 +18,13 @@ export function InvoicePreview({ invoice }: Props) {
   return (
     <div
       id="invoice-preview"
-      className="bg-white p-12 text-black w-[800px] mx-auto"
+      className="bg-white text-black mx-auto w-full max-w-[800px] p-6 md:p-12 rounded-lg"
     >
       {/* Header */}
-      <div className="flex justify-between mb-10">
-        <h1 className="text-3xl font-bold">{t.invoice}</h1>
+      <div className="flex flex-col gap-6 md:flex-row md:justify-between md:mb-10 mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold">{t.invoice}</h1>
 
-        <div className="text-right">
+        <div className="md:text-right space-y-1 text-sm md:text-base">
           <p>
             {t.invoiceNumber}: {invoice.invoiceNumber}
           </p>
@@ -38,73 +38,91 @@ export function InvoicePreview({ invoice }: Props) {
       </div>
 
       {/* Companies */}
-      <div className="flex justify-between mb-10">
-        <div className="w-[350px]">
+      <div className="flex flex-col gap-8 md:flex-row md:justify-between mb-8 md:mb-10">
+        <div className="w-full md:w-[350px]">
           <h2 className="font-semibold mb-2">{t.from}</h2>
 
           <p className="font-medium">{invoice.from.name}</p>
 
-          <p className="whitespace-pre-line">{invoice.from.address}</p>
+          <p className="whitespace-pre-line text-sm md:text-base">
+            {invoice.from.address}
+          </p>
         </div>
 
-        <div className="w-[350px] text-right">
+        <div className="w-full md:w-[350px] md:text-right">
           <h2 className="font-semibold mb-2">{t.to}</h2>
 
           <p className="font-medium">{invoice.to.name}</p>
 
-          <p className="whitespace-pre-line">{invoice.to.address}</p>
+          <p className="whitespace-pre-line text-sm md:text-base">
+            {invoice.to.address}
+          </p>
         </div>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-t border-b">
-        <thead>
-          <tr>
-            <th className="w-[40px] py-2 text-left">#</th>
-            <th className="w-[45%] text-left">{t.description}</th>
-            <th className="w-[100px] text-center">{t.qty}</th>
-            <th className="w-[120px] text-center">{t.price}</th>
-            <th className="w-[120px] text-right">{t.total}</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {invoice.items.map((item, index) => (
-            <tr key={item.id} className="border-t">
-              <td className="py-2">{index + 1}</td>
-
-              <td>{item.description}</td>
-
-              <td className="text-center">{item.quantity}</td>
-
-              <td className="text-center">
-                {formatNumber(parseFloat(item.price) || 0, invoice.language)}
-              </td>
-
-              <td className="text-right">
-                {formatNumber(calculateLineTotal(item), invoice.language)}
-              </td>
+      {/* Table (scrollable on mobile) */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-t border-b text-sm md:text-base min-w-[600px]">
+          <thead>
+            <tr>
+              <th className="py-2 text-left w-[40px]">#</th>
+              <th className="text-left">{t.description}</th>
+              <th className="text-center w-[80px]">{t.qty}</th>
+              <th className="text-center w-[100px]">{t.price}</th>
+              <th className="text-right w-[100px]">{t.total}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
 
-      <div className="text-right mt-6 text-xl font-semibold">
-        {t.total}: {/* {formatNumber(subtotal, invoice.language)} */}
+          <tbody>
+            {invoice.items.map((item, index) => (
+              <tr key={item.id} className="border-t">
+                <td className="py-2">{index + 1}</td>
+
+                <td>{item.description}</td>
+
+                <td className="text-center">
+                  {formatNumber(
+                    parseFloat(item.quantity) || 0,
+                    invoice.language,
+                  )}
+                </td>
+
+                <td className="text-center">
+                  {formatNumber(parseFloat(item.price) || 0, invoice.language)}
+                </td>
+
+                <td className="text-right">
+                  {formatNumber(calculateLineTotal(item), invoice.language)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Total */}
+      <div className="text-right mt-6 text-lg md:text-xl font-semibold">
+        {t.total}:{" "}
         {formatCurrency(subtotal, invoice.currency, invoice.language)}
       </div>
 
+      {/* Payment */}
       {invoice.paymentDetails && (
         <div className="mt-8">
-          <h3 className="font-semibold">{t.paymentDetails}</h3>
-          <p className="whitespace-pre-line">{invoice.paymentDetails}</p>
+          <h3 className="font-semibold mb-1">{t.paymentDetails}</h3>
+          <p className="whitespace-pre-line text-sm md:text-base">
+            {invoice.paymentDetails}
+          </p>
         </div>
       )}
 
+      {/* Notes */}
       {invoice.notes && (
         <div className="mt-6">
-          <h3 className="font-semibold">{t.notes}</h3>
-          <p className="whitespace-pre-line">{invoice.notes}</p>
+          <h3 className="font-semibold mb-1">{t.notes}</h3>
+          <p className="whitespace-pre-line text-sm md:text-base">
+            {invoice.notes}
+          </p>
         </div>
       )}
     </div>
