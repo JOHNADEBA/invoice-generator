@@ -27,14 +27,9 @@ export function Button({
         },
         // Variant
         {
-          "bg-black text-white border border-white hover:bg-white hover:text-black":
-            variant === "primary",
-
-          "bg-transparent text-white border border-white hover:bg-white hover:text-black":
-            variant === "outline",
-
-          "bg-red-600 text-white border border-red-600 hover:bg-red-700":
-            variant === "danger",
+          "bg-blue-600 text-white border border-blue-600 hover:bg-blue-700": variant === "primary",
+          "bg-gray-600 text-white border border-gray-600 hover:bg-gray-700": variant === "outline",
+          "bg-red-600 text-white border border-red-600 hover:bg-red-700": variant === "danger",
         },
         className,
       )}

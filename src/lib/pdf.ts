@@ -30,7 +30,6 @@ export async function generatePDF(html: string): Promise<Buffer> {
       args: chromium.args,
       executablePath,
       headless: true,
-      // ignoreHTTPSErrors removed – not supported in recent versions
     });
   } else {
     // Local dev: full puppeteer (auto-downloads compatible Chromium/Chrome)
@@ -61,7 +60,7 @@ export async function generatePDF(html: string): Promise<Buffer> {
       margin: { top: "1cm", right: "1cm", bottom: "1cm", left: "1cm" },
     });
 
-    // Convert to Node Buffer for your API/Response (e.g., new Response(pdfBuffer))
+    // Convert to Node Buffer for API/Response (e.g., new Response(pdfBuffer))
     return Buffer.from(pdfUint8);
   } catch (err) {
     console.error("PDF generation failed:", err);

@@ -1,220 +1,118 @@
 "use client";
 
-import { useState } from "react";
-import { v4 as uuid } from "uuid";
-
-import { Invoice } from "@/types/invoice";
-import { LineItemsTable } from "@/components/invoice/LineItemsTable";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { InvoiceHeader } from "@/components/invoice/InvoiceHeader";
+import { InvoiceForm } from "@/components/invoice/InvoiceForm";
+import { InvoiceActions } from "@/components/invoice/InvoiceActions";
 import { InvoicePreview } from "@/components/invoice/InvoicePreview";
-
-import { Input } from "@/components/ui/Input";
-import { TextArea } from "@/components/ui/TextArea";
-import { Button } from "@/components/ui/Button";
+import { useInvoiceForm } from "@/hooks/useInvoiceForm";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 export default function Page() {
-  const today = new Date().toISOString().split("T")[0];
+  const [isClient, setIsClient] = useState(false);
+  const { isSignedIn } = useUser();
 
-  const [currency, setCurrency] = useState<Invoice["currency"]>("USD");
-  const [language, setLanguage] = useState<Invoice["language"]>("en");
+  const form = useInvoiceForm();
 
-  const [items, setItems] = useState([
-    {
-      id: uuid(),
-      description: "",
-      quantity: "1",
-      price: "0",
-    },
-  ]);
+  const { isSaving, lastSaved, hasChanges } = useAutoSave(
+    "invoice_draft",
+    form.invoice,
+    3000,
+  );
 
-  const [invoiceNumber, setInvoiceNumber] = useState("001");
+  // Load from history on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("invoice_draft");
+    if (savedDraft) {
+      const data = JSON.parse(savedDraft);
+      form.loadFromHistory(data);
+      localStorage.removeItem("invoice_draft");
+    }
+  }, []);
 
-  const [issueDate, setIssueDate] = useState(today);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const [dueDate, setDueDate] = useState(today);
+  // Auto-generate invoice number
+  useEffect(() => {
+    if (isClient && !form.invoiceNumber && !form.isLoadingFromHistory) {
+      form.setInvoiceNumber(form.generateNextInvoiceNumber());
+    }
+  }, [isClient, form.invoiceNumber]);
 
-  const [fromName, setFromName] = useState("");
-  const [fromAddress, setFromAddress] = useState("");
+  // Auto-save to database
+  useEffect(() => {
+    if (
+      isSignedIn &&
+      isClient &&
+      form.invoiceNumber &&
+      !form.isSavingToDb &&
+      !form.isLoadingFromHistory
+    ) {
+      const hasData =
+        form.fromName ||
+        form.toName ||
+        form.items.some((item) => item.description);
+      if (!hasData) return;
 
-  const [toName, setToName] = useState("");
-  const [toAddress, setToAddress] = useState("");
+      const timeoutId = setTimeout(() => {
+        form.saveToDatabase();
+      }, 5000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [form.invoice, isSignedIn, isClient]);
 
-  const [paymentDetails, setPaymentDetails] = useState("");
-
-  const [notes, setNotes] = useState("");
-
-  const invoice: Invoice = {
-    invoiceNumber,
-    issueDate,
-    dueDate,
-    currency,
-    language,
-    from: {
-      name: fromName,
-      address: fromAddress,
-    },
-    to: {
-      name: toName,
-      address: toAddress,
-    },
-    items,
-    paymentDetails,
-    notes,
-  };
-
-  const downloadPDF = async () => {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        invoice,
-      }),
-    });
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${invoiceNumber}.pdf`;
-    a.click();
-  };
+  if (!isClient) return null;
 
   return (
-    <main className="px-4 py-6 md:p-10">
+    <main className="px-4 py-6 md:p-10 min-h-screen">
       <div className="max-w-6xl mx-auto space-y-8 md:space-y-10">
-        {/* HEADER CONTROLS */}
-        <div className="flex flex-col gap-6 md:flex-row md:justify-between md:items-end">
-          {/* LEFT SIDE */}
-          <div className="space-y-3 w-full md:w-auto">
-            <Input
-              placeholder="Invoice Number"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-            />
+        <InvoiceHeader
+          isSaving={isSaving}
+          hasChanges={hasChanges}
+          lastSaved={lastSaved}
+          isSignedIn={isSignedIn ?? false}
+          lastDbSave={form.lastDbSave}
+          onNewInvoice={form.newInvoice}
+        />
 
-            <div className="flex flex-col gap-3 md:flex-row md:gap-4">
-              <Input
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-              />
-              <Input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
-          </div>
+        <InvoiceForm
+          invoiceNumber={form.invoiceNumber}
+          setInvoiceNumber={form.setInvoiceNumber}
+          issueDate={form.issueDate}
+          setIssueDate={form.setIssueDate}
+          dueDate={form.dueDate}
+          setDueDate={form.setDueDate}
+          currency={form.currency as any}
+          setCurrency={form.setCurrency}
+          language={form.language}
+          setLanguage={form.setLanguage}
+          fromName={form.fromName}
+          setFromName={form.setFromName}
+          fromAddress={form.fromAddress}
+          setFromAddress={form.setFromAddress}
+          toName={form.toName}
+          setToName={form.setToName}
+          toAddress={form.toAddress}
+          setToAddress={form.setToAddress}
+          paymentDetails={form.paymentDetails}
+          setPaymentDetails={form.setPaymentDetails}
+          notes={form.notes}
+          setNotes={form.setNotes}
+          items={form.items}
+          setItems={form.setItems}
+        />
 
-          {/* RIGHT SIDE */}
-          <div className="flex flex-col gap-4 w-full md:w-auto md:flex-row md:gap-6">
-            <div className="w-full md:w-auto">
-              <label className="block mb-1 font-medium">Currency</label>
-              <select
-                value={currency}
-                onChange={(e) =>
-                  setCurrency(e.target.value as Invoice["currency"])
-                }
-                className="border rounded-md px-4 py-2 w-full"
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="NGN">NGN</option>
-              </select>
-            </div>
+        <InvoiceActions
+          onClear={form.clearForm}
+          onDownload={form.downloadPDF}
+        />
 
-            <div className="w-full md:w-auto">
-              <label className="block mb-1 font-medium">Language</label>
-              <select
-                value={language}
-                onChange={(e) =>
-                  setLanguage(e.target.value as Invoice["language"])
-                }
-                className="border rounded-md px-4 py-2 w-full"
-              >
-                <option value="en">English</option>
-                <option value="sl">Slovenščina</option>
-                <option value="it">Italiano</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* COMPANY SECTION */}
-        <div className="flex flex-col gap-8 md:flex-row md:justify-between">
-          <div className="w-full md:w-1/2 space-y-3">
-            <h2 className="font-semibold text-lg">From</h2>
-
-            <Input
-              placeholder="Company Name"
-              value={fromName}
-              onChange={(e) => setFromName(e.target.value)}
-            />
-
-            <TextArea
-              placeholder="Company Address (each line will appear on invoice)"
-              value={fromAddress}
-              onChange={(e) => setFromAddress(e.target.value)}
-            />
-          </div>
-
-          <div className="w-full md:w-1/2 space-y-3 md:text-right">
-            <h2 className="font-semibold text-lg">To</h2>
-
-            <Input
-              placeholder="Client Name"
-              value={toName}
-              onChange={(e) => setToName(e.target.value)}
-            />
-
-            <TextArea
-              placeholder="Client Address (each line will appear on invoice)"
-              value={toAddress}
-              onChange={(e) => setToAddress(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* LINE ITEMS */}
         <div className="overflow-x-auto">
-          <LineItemsTable
-            items={items}
-            setItems={setItems}
-            currency={currency}
-          />
-        </div>
-
-        {/* PAYMENT + NOTES */}
-        <div className="space-y-6">
-          <TextArea
-            placeholder="Payment Details"
-            value={paymentDetails}
-            onChange={(e) => setPaymentDetails(e.target.value)}
-          />
-
-          <TextArea
-            placeholder="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </div>
-
-        <Button
-          variant="outline"
-          onClick={downloadPDF}
-          className="w-full md:w-auto"
-        >
-          Download PDF
-        </Button>
-
-        {/* PREVIEW */}
-        <div className="overflow-x-auto">
-          <InvoicePreview invoice={invoice} />
+          <h2 className="font-semibold text-lg mb-4">Preview</h2>
+          <InvoicePreview invoice={form.invoice} />
         </div>
       </div>
     </main>

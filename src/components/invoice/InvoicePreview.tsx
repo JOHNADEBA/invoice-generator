@@ -26,13 +26,13 @@ export function InvoicePreview({ invoice }: Props) {
 
         <div className="md:text-right space-y-1 text-sm md:text-base">
           <p>
-            {t.invoiceNumber}: {invoice.invoiceNumber}
+            {t.invoiceNumber}: {invoice.invoiceNumber || "---"}
           </p>
           <p>
-            {t.issue}: {invoice.issueDate}
+            {t.issue}: {invoice.issueDate || "---"}
           </p>
           <p>
-            {t.due}: {invoice.dueDate}
+            {t.due}: {invoice.dueDate || "---"}
           </p>
         </div>
       </div>
@@ -41,26 +41,22 @@ export function InvoicePreview({ invoice }: Props) {
       <div className="flex flex-col gap-8 md:flex-row md:justify-between mb-8 md:mb-10">
         <div className="w-full md:w-[350px]">
           <h2 className="font-semibold mb-2">{t.from}</h2>
-
-          <p className="font-medium">{invoice.from.name}</p>
-
+          <p className="font-medium">{invoice.from.name || "—"}</p>
           <p className="whitespace-pre-line text-sm md:text-base">
-            {invoice.from.address}
+            {invoice.from.address || "—"}
           </p>
         </div>
 
         <div className="w-full md:w-[350px] md:text-right">
           <h2 className="font-semibold mb-2">{t.to}</h2>
-
-          <p className="font-medium">{invoice.to.name}</p>
-
+          <p className="font-medium">{invoice.to.name || "—"}</p>
           <p className="whitespace-pre-line text-sm md:text-base">
-            {invoice.to.address}
+            {invoice.to.address || "—"}
           </p>
         </div>
       </div>
 
-      {/* Table (scrollable on mobile) */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-t border-b text-sm md:text-base min-w-[600px]">
           <thead>
@@ -72,14 +68,11 @@ export function InvoicePreview({ invoice }: Props) {
               <th className="text-right w-[100px]">{t.total}</th>
             </tr>
           </thead>
-
           <tbody>
             {invoice.items.map((item, index) => (
               <tr key={item.id} className="border-t">
                 <td className="py-2">{index + 1}</td>
-
-                <td>{item.description}</td>
-
+                <td>{item.description || "—"}</td>
                 <td className="text-right tabular-nums">
                   {formatNumber(
                     parseFloat(item.quantity) || 0,
@@ -87,11 +80,9 @@ export function InvoicePreview({ invoice }: Props) {
                     "quantity",
                   )}
                 </td>
-
                 <td className="text-right tabular-nums">
                   {formatNumber(parseFloat(item.price) || 0, invoice.language)}
                 </td>
-
                 <td className="text-right tabular-nums">
                   {formatNumber(calculateLineTotal(item), invoice.language)}
                 </td>

@@ -44,7 +44,11 @@ export function LineItemsTable({ items, setItems }: Props) {
           {/* MOBILE LAYOUT */}
           <div className="flex justify-between items-center mb-3 md:hidden">
             <span className="font-medium">Item {index + 1}</span>
-            <Button size="sm" onClick={() => removeItem(item.id)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => removeItem(item.id)}
+            >
               X
             </Button>
           </div>
@@ -87,7 +91,11 @@ export function LineItemsTable({ items, setItems }: Props) {
 
             {/* DELETE (Desktop only) */}
             <div className="hidden md:block">
-              <Button size="sm" onClick={() => removeItem(item.id)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeItem(item.id)}
+              >
                 X
               </Button>
             </div>
